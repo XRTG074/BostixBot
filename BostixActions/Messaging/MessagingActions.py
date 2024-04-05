@@ -37,3 +37,45 @@ def StartPreSignIn(callbackData, main_message_id):
 
     bot.edit_message_text("Давайте начинать!\n\nВы <b>учитель</b> или <b>ученик</b>?",
                           callbackData.message.chat.id, main_message_id, parse_mode="html", reply_markup=keyboard)
+    
+# - Отправка меню после пре-регистрации
+
+def AfterPreSignIn(callbackData, main_message_id):
+    keyboard = types.InlineKeyboardMarkup()
+    button_signIn = types.InlineKeyboardButton(text="Зарегистрироваться", callback_data="signIn")
+    keyboard.add(button_signIn)
+    if callbackData.data == "teacher":
+        button_learnMaterials = types.InlineKeyboardButton(text="Лекционные материалы", callback_data="learnMaterials")
+        keyboard.add(button_learnMaterials)
+    elif callbackData.data == "student":
+        button_learnMaterials = types.InlineKeyboardButton(text="Лекционные материалы", callback_data="learnMaterials")
+        keyboard.add(button_learnMaterials)
+        button_testExams = types.InlineKeyboardButton(text="Пробные экзамены", callback_data="testExams")
+        keyboard.add(button_testExams)
+    button_previous = types.InlineKeyboardButton(text="Вернуться к предыдущему шагу", callback_data="previous")
+    keyboard.add(button_previous)
+    
+    # - Изменение вида меню в зависимости от выбранного на пре-регистрации (Я - учитель ИЛИ Я - ученик)
+
+    if callbackData.data == "teacher":
+        bot.edit_message_text('Отлично!\n\nЯ могу предоставить Вам лекционные материалы, которые Вы можете использовать как материал для рассказа на уроке'
+                              '\nЧтобы получить к ним доступ нажмите на кнопку "Лекционные материалы"\n\nОднако это не все, что я умею. '
+                              'Вы можете создать класс, в который сможете добавить всех своих учеников, чтобы присылать им домашние задания и следить за их успеваемостью, проводить уроки онлайн,'
+                               ' создавать тесты и контрольные работы, индивидуальные для каждого ученика и другие вещи'
+                               '\n\nНо для доступа к этому функционалу Вам необходимо зарегистрироваться'
+                               '\nНажмите на кнопку "Зарегистрироваться" ниже и создайте аккаунт',
+                               callbackData.message.chat.id, main_message_id, parse_mode="html",reply_markup=keyboard)
+    elif callbackData.data == "student":
+        bot.edit_message_text('Отлично!\n\nЯ могу предоставить Вам лекционные материалы, которые Вы можете использовать как шпаргалку при выполнении домашних заданий'
+                              '\nЧтобы получить к ним доступ нажмите на кнопку "Лекционные материалы"'
+                              '\n\nВы также можете проверить свои знания, пройдя тест или конрольную работу, которую я сгенерирую для Вас. '
+                              'Просто нажмите на кнопку "Пробные экзамены" и выберите необходимый вам предмет и класс'
+                              '\n\nОднако это не все, что я умею. Если Ваш учитель создал класс, Вы можете присоединиться к нему и получать знания!'
+                              '\n\nНо для доступа к этому функционалу Вам необходимо зарегистрироваться\nНажмите на кнопку "Зарегистрироваться" ниже и создайте аккаунт',
+                              callbackData.message.chat.id, main_message_id, parse_mode="html",reply_markup=keyboard)
+    else:
+        bot.edit_message_text('Отлично!\n\nЯ могу предоставить Вам обширный функционал для управления школы. '
+                              'Контролируйте школу, классы, действия учителей, отслеживайте "проблемных учеников", создавайте массовые рассылки важной информации и многое другое'
+                              '\n\nНо для доступа к этому функционалу Вам необходимо зарегистрироваться'
+                              '\nНажмите на кнопку "Зарегистрироваться" ниже и создайте аккаунт',
+                              callbackData.message.chat.id, main_message_id, parse_mode="html",reply_markup=keyboard)

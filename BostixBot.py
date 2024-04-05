@@ -48,6 +48,22 @@ def getCallback(callbackData):
         current_menu = "PreSignIn"
 
         Messaging.StartPreSignIn(callbackData, main_message_id)
+    
+    # - Обработка нажатия кнопки "Я - учитель, "Я - ученик" или "Я - директор школы"
+
+    elif callbackData.data == "teacher" or callbackData.data == "student" or callbackData.data == "principal":
+        global tempRole # - Временная переменная школьного статуса пользователя
+
+        if callbackData.data == "teacher":
+            tempRole = "Teacher"
+        elif callbackData.data == "student":
+            tempRole = "Student"
+        else:
+            tempRole = "Principal"
+
+        current_menu = "AfterPreSignIn"
+
+        Messaging.AfterPreSignIn(callbackData, main_message_id)
 
 
 bot.polling(none_stop=True, interval=0) # - Ожидание сообщения от пользователя
