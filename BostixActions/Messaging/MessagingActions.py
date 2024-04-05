@@ -22,3 +22,18 @@ def sendGreeting(messageData):
                      'Не волнуйся, я постараюсь объяснить все как можно понятней '
                      '\n\n\nЗаинтригованны?\nТогда жмите на кнопку "НАЧАТЬ" скорее!', 
                      parse_mode="html", reply_markup=keyboard)
+
+# - Начало пре-регистрации
+
+def StartPreSignIn(callbackData, main_message_id):
+    keyboard = types.InlineKeyboardMarkup()
+    button_teacher = types.InlineKeyboardButton(text="Я - учитель", callback_data="teacher")
+    button_student = types.InlineKeyboardButton(text="Я - ученик", callback_data="student")
+    keyboard.add(button_teacher, button_student)
+    button_principal = types.InlineKeyboardButton(text="Я - директор школы", callback_data="principal")
+    keyboard.add(button_principal)
+    button_exit = types.InlineKeyboardButton(text="Вернуться в меню", callback_data="previous")
+    keyboard.add(button_exit)
+
+    bot.edit_message_text("Давайте начинать!\n\nВы <b>учитель</b> или <b>ученик</b>?",
+                          callbackData.message.chat.id, main_message_id, parse_mode="html", reply_markup=keyboard)
