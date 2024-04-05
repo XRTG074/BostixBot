@@ -79,3 +79,26 @@ def AfterPreSignIn(callbackData, main_message_id):
                               '\n\nНо для доступа к этому функционалу Вам необходимо зарегистрироваться'
                               '\nНажмите на кнопку "Зарегистрироваться" ниже и создайте аккаунт',
                               callbackData.message.chat.id, main_message_id, parse_mode="html",reply_markup=keyboard)
+        
+# - Первый этап регистрации
+
+def SignInStage1(chat_id, main_message_id, current_menu):
+
+    # - Запрос фамилии пользователя
+  
+    if current_menu == "SignInStage1_Surname":
+        bot.edit_message_text("Поехали!\n\nПожалуйста напишите мне Вашу <b>настоящую</b> Фамилию:",
+                              chat_id, main_message_id, parse_mode="html")
+
+    # - Запрос имени пользователя
+
+    elif current_menu == "SignInStage1_Name":
+        bot.edit_message_text("Хорошо\n\nТеперь напишите мне Ваше <b>настоящее</b> Имя:",
+                              chat_id, main_message_id, parse_mode="html")
+
+    # - Запрос отчества пользователя
+
+    elif current_menu == "SignInStage1_Patronymic":
+      
+        bot.edit_message_text("И еще один вопрос\n\nПожалуйста напишите мне Ваше <b>настоящее</b> Отчество:",
+                              chat_id, main_message_id, parse_mode="html")

@@ -8,6 +8,11 @@ main_message_id = 0 # ID главного сообщения, где будет 
 
 current_menu = "None" # - Текущее меню бота
 
+# - Переменные для временного хранения перед отправкой в базу данных пользователей
+global tempSurname
+global tempName
+global tempPatronymic
+
 
 # - Инициализация бота в другом файле
 
@@ -27,6 +32,24 @@ def getMessage(messageData):
 
             if main_message_id == 0:
                   Messaging.sendGreeting(messageData)
+    
+    # - Получение фамилии, имени и отчества
+
+    elif "SignInStage1" in current_menu:
+        if current_menu == "SignInStage1_Surname":
+            tempSurname = messageData.text
+          
+            current_menu = "SignInStage1_Name"
+
+            Messaging.SignInStage1(messageData.from_user.id, main_message_id, current_menu)
+        elif current_menu == "SignInStage1_Name":
+            tempName = messageData.text
+          
+            current_menu = "SignInStage1_Patronymic"
+
+            Messaging.SignInStage1(messageData.from_user.id, main_message_id, current_menu)
+        elif current_menu == "SignInStage1_Patronymic":
+            tempPatronymic = messageData.text
 
 ### - Обработчик Inline клавиатуры
 @bot.callback_query_handler(func=lambda call: True)
@@ -64,6 +87,13 @@ def getCallback(callbackData):
         current_menu = "AfterPreSignIn"
 
         Messaging.AfterPreSignIn(callbackData, main_message_id)
+    
+    # - Обработка нажатия кнопки "Зарегистрироваться"
+  
+    elif callbackData.data == "signIn":
+        current_menu = "SignInStage1_Surname"
+
+        Messaging.SignInStage1(callbackData.message.chat.id, main_message_id, current_menu)
 
 
 bot.polling(none_stop=True, interval=0) # - Ожидание сообщения от пользователя
