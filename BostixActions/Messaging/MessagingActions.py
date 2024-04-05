@@ -102,3 +102,15 @@ def SignInStage1(chat_id, main_message_id, current_menu):
       
         bot.edit_message_text("И еще один вопрос\n\nПожалуйста напишите мне Ваше <b>настоящее</b> Отчество:",
                               chat_id, main_message_id, parse_mode="html")
+
+# - Подтверждение правильности фамилии, имени и отчества пользователя
+
+def ConfirmSignInStage1(surname, name, patronymic, messageData, main_message_id):
+    keyboard = types.InlineKeyboardMarkup()
+    button_confirm = types.InlineKeyboardButton(text="Да, все верно", callback_data="confirmSignInStage1")
+    keyboard.add(button_confirm)
+    button_edit = types.InlineKeyboardButton(text="Нет, мне нужно кое-что изменить", callback_data="editSignInProfileData")
+    keyboard.add(button_edit)
+
+    bot.edit_message_text(f"Вас зовут: <b>{surname.capitalize()} {name.capitalize()} {patronymic.capitalize()}</b>, все верно?",
+                          messageData.chat.id, main_message_id, parse_mode="html", reply_markup=keyboard)

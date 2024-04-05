@@ -51,6 +51,10 @@ def getMessage(messageData):
         elif current_menu == "SignInStage1_Patronymic":
             tempPatronymic = messageData.text
 
+            current_menu = "SignInStage1_Confrim"
+
+            Messaging.ConfirmSignInStage1(tempSurname, tempName, tempPatronymic, messageData, main_message_id)
+
 ### - Обработчик Inline клавиатуры
 @bot.callback_query_handler(func=lambda call: True)
 def getCallback(callbackData):
