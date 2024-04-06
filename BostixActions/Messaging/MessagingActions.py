@@ -117,7 +117,7 @@ def ConfirmSignInStage1(surname, name, patronymic, messageData, main_message_id)
 
 # - Второй этап регистрации
 
-def SignInStage2(callbackData, main_message_id, current_menu, role):
+def SignInStage2(chat_id, main_message_id, current_menu, role):
     print(current_menu)
     if current_menu == "SignInStage2_SchoolAdd":
         keyboard = types.InlineKeyboardMarkup()
@@ -138,7 +138,7 @@ def SignInStage2(callbackData, main_message_id, current_menu, role):
                                   'Вы сможете создать класс и добавить туда Ваших учеников'
                                   '\n\nЕсли у Вас есть <b>логин</b> Вашей школы, нажмите на кнопку "Привязать школу"'
                                   '\n\nВ противном случае нажмите на кнопку "Пропустить этот шаг"\nВы сможете создать/привязать школу позже, в настройках Вашего профиля',
-                                    callbackData.message.chat.id, main_message_id, parse_mode="html", reply_markup=keyboard)
+                                    chat_id, main_message_id, parse_mode="html", reply_markup=keyboard)
         elif role == "Student":
             bot.edit_message_text('Окей, тогда продолжаем:\n\n\nЕсли Ваш директор/управляющее лицо создало электронную школу в моей базе данных, '
                                   'Вы можете присоединиться к ней введя ее уникальный <b>логин</b>, который можно узнать у одного из лиц, имеющих к нему доступ'
@@ -146,7 +146,7 @@ def SignInStage2(callbackData, main_message_id, current_menu, role):
                                   '\n\nЕсли у Вас есть <b>логин</b> Вашей школы, нажмите на кнопку "Привязать школу"'
                                   '\n\nВ противном случае нажмите на кнопку "Пропустить этот шаг"'
                                   '\nВы сможете создать/привязать школу позже, в настройках Вашего профиля',
-                                  callbackData.message.chat.id, main_message_id, parse_mode="html", reply_markup=keyboard)
+                                  chat_id, main_message_id, parse_mode="html", reply_markup=keyboard)
         else:
             bot.edit_message_text('Окей, тогда продолжаем:\n\n\nСейчас Вы можете создать свою школу, куда Вы добавите всех учителей, '
                                   'а они в свою очередь всех своих учеников\n\nВы можете создать школу прямо сейчас - это не сложно!'
@@ -154,16 +154,16 @@ def SignInStage2(callbackData, main_message_id, current_menu, role):
                                    ' - Тогда Вы можете присоединиться к ней, введя ее уникальный <b>логин</b>, который Вы можете узнать у одного из лиц, имеющих к нему доступ'
                                    '\n\nЕсли у Вас есть <b>логин</b> Вашей школы, нажмите на кнопку "Привязать школу"'
                                    '\n\nВ противном случае нажмите на кнопку "Пропустить этот шаг"\nВы сможете создать/привязать школу позже, в настройках Вашего профиля',
-                                   callbackData.message.chat.id, main_message_id, parse_mode="html", reply_markup=keyboard)
+                                   chat_id, main_message_id, parse_mode="html", reply_markup=keyboard)
 
     elif current_menu == "SignInStage2_SchoolCreateLogin":
             bot.edit_message_text('Тогда вперед!\n\nПридумайте <b>логин</b> Вашей школы'
                                   '\nОн будет использоваться как второе имя Вашей школы и для ряда других вещей'
                                   '\n\nНапишите мне <b>логин</b> вашей школы:',
-                                  callbackData.from_user.id, main_message_id, parse_mode="html")
+                                  chat_id, main_message_id, parse_mode="html")
     elif current_menu == "SignInStage2_SchoolCreateName":
             bot.edit_message_text("И последний рывок:\n\nТеперь напишите мне название Вашей школы", 
-                                  callbackData.from_user.id, main_message_id, parse_mode="html")
+                                  chat_id, main_message_id, parse_mode="html")
 
 def ConfirmSignInStage2(schoolLogin, messageData, main_message_id, role, schoolName='ЗдесьБуквальноНичегоНету'):
     if role == "Teacher" or role == "Student":

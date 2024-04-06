@@ -66,7 +66,7 @@ def getMessage(messageData):
 
             tempSchoolLogin = messageData.text
 
-            Messaging.SignInStage2(None, main_message_id, current_menu, tempRole)
+            Messaging.SignInStage2(messageData.from_user.id, main_message_id, current_menu, tempRole)
         elif current_menu == "SignInStage2_SchoolCreateName":
             current_menu = "SignInStage2_Confirm"
 
@@ -123,14 +123,14 @@ def getCallback(callbackData):
     elif callbackData.data == "confirmSignInStage1":
         current_menu = "SignInStage2_SchoolAdd"
 
-        Messaging.SignInStage2(callbackData, main_message_id, current_menu, tempRole)
+        Messaging.SignInStage2(callbackData.message.chat.id, main_message_id, current_menu, tempRole)
 
     # - Обработка нажатия кнопки "Создать школу"
 
     elif callbackData.data == "createSchool":
         current_menu = "SignInStage2_SchoolCreateLogin"
 
-        Messaging.SignInStage2(callbackData, main_message_id, current_menu, tempRole)
+        Messaging.SignInStage2(callbackData.message.chat.id, main_message_id, current_menu, tempRole)
 
 
 bot.polling(none_stop=True, interval=0) # - Ожидание сообщения от пользователя
