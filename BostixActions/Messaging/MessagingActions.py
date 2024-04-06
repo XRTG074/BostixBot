@@ -1,5 +1,7 @@
 from telebot import types # - Библиотека для работы с крутыми штуками Telegram
 
+import BostixData.Users.UsersData as Users # - Библиотека для работы с базой данных пользователей
+import BostixData.Schools.SchoolsData as Schools # - Библиотека для работы с базой данных школ
 
 # - Инициализация бота
 
@@ -22,6 +24,24 @@ def sendGreeting(messageData):
                      'Не волнуйся, я постараюсь объяснить все как можно понятней '
                      '\n\n\nЗаинтригованны?\nТогда жмите на кнопку "НАЧАТЬ" скорее!', 
                      parse_mode="html", reply_markup=keyboard)
+
+# - Отправка приветственного сообщения (В случае возврата в меню)
+    
+def resendGreeting(callbackData, main_message_id):
+  
+    keyboard = types.InlineKeyboardMarkup()
+    button_start = types.InlineKeyboardButton(text="НАЧАТЬ", callback_data="start")
+    keyboard.add(button_start)
+
+    bot.edit_message_text('Приветствую! Меня зовут Бостикс и я чат-бот, который готов помочь Вам с учебой или с ее организацией!,'
+                     '\n\n\n<b>Учителю:</b>\n\n- Я могу быть учителем и самостоятельно проводить урок или помогать учителю с такой рутиной как перекличка, выставление оценок и отслеживание успеваемости учеников,'
+                     '\n\n- Я могу составлять домашние задания, тесты и контрольные работы на основе пройденного материала. Причем индивидуальное для каждого ученика!!! (Немного случайной генерации чисел и щепотка магии)'
+                     '\n\n- Помимо всего этого, Вы сможете с легкостью настраивать мои алгоритмы, составлять собственные домашние задания, тесты и контрольные работы, а также отслеживать все мои действия'
+                     '\n\n<b>Ученику:</b>\n\n- Возникли трудности с пониманием какой-либо темы?'
+                     'Не волнуйся, я постараюсь объяснить все как можно понятней '
+                     '\n\n\nЗаинтригованны?\nТогда жмите на кнопку "НАЧАТЬ" скорее!', 
+                     callbackData.message.chat.id, main_message_id, parse_mode="html", reply_markup=keyboard)
+
 
 # - Начало пре-регистрации
 
@@ -84,44 +104,50 @@ def AfterPreSignIn(callbackData, main_message_id):
 
 def SignInStage1(chat_id, main_message_id, current_menu):
 
+    keyboard = types.InlineKeyboardMarkup()
+    button_previous = types.InlineKeyboardButton(text="Вернуться к предыдущему шагу", callback_data="previous")
+    keyboard.add(button_previous)
+
     # - Запрос фамилии пользователя
   
     if current_menu == "SignInStage1_Surname":
         bot.edit_message_text("Поехали!\n\nПожалуйста напишите мне Вашу <b>настоящую</b> Фамилию:",
-                              chat_id, main_message_id, parse_mode="html")
+                              chat_id, main_message_id, parse_mode="html", reply_markup=keyboard)
 
     # - Запрос имени пользователя
 
     elif current_menu == "SignInStage1_Name":
         bot.edit_message_text("Хорошо\n\nТеперь напишите мне Ваше <b>настоящее</b> Имя:",
-                              chat_id, main_message_id, parse_mode="html")
+                              chat_id, main_message_id, parse_mode="html", reply_markup=keyboard)
 
     # - Запрос отчества пользователя
 
     elif current_menu == "SignInStage1_Patronymic":
       
         bot.edit_message_text("И еще один вопрос\n\nПожалуйста напишите мне Ваше <b>настоящее</b> Отчество:",
-                              chat_id, main_message_id, parse_mode="html")
+                              chat_id, main_message_id, parse_mode="html", reply_markup=keyboard)
 
-# - Подтверждение правильности фамилии, имени и отчества пользователя
+# - Подтверждение первого этапа регистрации
 
-def ConfirmSignInStage1(surname, name, patronymic, messageData, main_message_id):
+def ConfirmSignInStage1(surname, name, patronymic, chat_id, main_message_id):
     keyboard = types.InlineKeyboardMarkup()
     button_confirm = types.InlineKeyboardButton(text="Да, все верно", callback_data="confirmSignInStage1")
     keyboard.add(button_confirm)
     button_edit = types.InlineKeyboardButton(text="Нет, мне нужно кое-что изменить", callback_data="editSignInStage1")
     keyboard.add(button_edit)
+    button_previous = types.InlineKeyboardButton(text="Назад", callback_data="previous")
+    keyboard.add(button_previous)
 
     bot.edit_message_text(f"Вас зовут: <b>{surname.capitalize()} {name.capitalize()} {patronymic.capitalize()}</b>, все верно?",
-                          messageData.chat.id, main_message_id, parse_mode="html", reply_markup=keyboard)
+                          chat_id, main_message_id, parse_mode="html", reply_markup=keyboard)
 
 # - Второй этап регистрации
 
 def SignInStage2(chat_id, main_message_id, current_menu, role):
     print(current_menu)
-    if current_menu == "SignInStage2_SchoolAdd":
-        keyboard = types.InlineKeyboardMarkup()
+    keyboard = types.InlineKeyboardMarkup()
 
+    if current_menu == "SignInStage2_SchoolAdd":
         if role == "Principal":
             button_createSchool = types.InlineKeyboardButton(text="Создать школу", callback_data="createSchool")
             keyboard.add(button_createSchool)
@@ -130,6 +156,9 @@ def SignInStage2(chat_id, main_message_id, current_menu, role):
         keyboard.add(button_linkSchool)
         button_skip = types.InlineKeyboardButton(text="Пропустить этот шаг", callback_data="skipSchoolAdd")
         keyboard.add(button_skip)
+
+        button_previous = types.InlineKeyboardButton(text="Вернуться к предыдущему шагу", callback_data="previous")
+        keyboard.add(button_previous)
 
         if role == "Teacher":
             bot.edit_message_text('Окей, тогда продолжаем:\n\n\nЕсли Ваш директор/управляющее лицо создало электронную школу в моей базе данных, '
@@ -157,34 +186,75 @@ def SignInStage2(chat_id, main_message_id, current_menu, role):
                                    chat_id, main_message_id, parse_mode="html", reply_markup=keyboard)
 
     elif current_menu == "SignInStage2_SchoolCreateLogin":
-            bot.edit_message_text('Тогда вперед!\n\nПридумайте <b>логин</b> Вашей школы'
-                                  '\nОн будет использоваться как второе имя Вашей школы и для ряда других вещей'
-                                  '\n\nНапишите мне <b>логин</b> вашей школы:',
-                                  chat_id, main_message_id, parse_mode="html")
+        button_previous = types.InlineKeyboardButton(text="Вернуться к предыдущему шагу", callback_data="previous")
+        keyboard.add(button_previous)
+        bot.edit_message_text('Тогда вперед!\n\nПридумайте <b>логин</b> Вашей школы'
+                             '\nОн будет использоваться как второе имя Вашей школы и для ряда других вещей'
+                             '\n\nНапишите мне <b>логин</b> Вашей школы:',
+                             chat_id, main_message_id, parse_mode="html", reply_markup=keyboard)
+        
+    elif current_menu == "SignInStage2_SchoolCreateLoginAgain":
+        button_previous = types.InlineKeyboardButton(text="Вернуться к предыдущему шагу", callback_data="previous")
+        keyboard.add(button_previous)
+        bot.edit_message_text('К сожалению этот невероятный <b>логин</b> уже занят((('
+                              '\n\nПридумайте и напишите мне <b>логин</b> еще раз:',
+                                chat_id, main_message_id, parse_mode="html", reply_markup=keyboard)
+        
     elif current_menu == "SignInStage2_SchoolCreateName":
-            bot.edit_message_text("И последний рывок:\n\nТеперь напишите мне название Вашей школы", 
-                                  chat_id, main_message_id, parse_mode="html")
+        button_previous = types.InlineKeyboardButton(text="Вернуться к предыдущему шагу", callback_data="previous")
+        keyboard.add(button_previous)
+        bot.edit_message_text("И последний рывок:\n\nТеперь напишите мне название Вашей школы", 
+                                  chat_id, main_message_id, parse_mode="html", reply_markup=keyboard)
+    
+    elif current_menu == "SignInStage2_SchoolLink":
+        button_previous = types.InlineKeyboardButton(text="Вернуться к предыдущему шагу", callback_data="previous")
+        keyboard.add(button_previous)
+        bot.edit_message_text('Тогда вперед!\n\nНапишите мне <b>логин</b> школы в которую Вы хотите вступить:',
+                              chat_id, main_message_id, parse_mode="html", reply_markup=keyboard)
+
+    elif current_menu == "SignInStage2_SchoolLinkAgain":
+        button_previous = types.InlineKeyboardButton(text="Вернуться к предыдущему шагу", callback_data="previous")
+        keyboard.add(button_previous)
+        bot.edit_message_text('Я не смог обнаружить школы с таким <b>логином</b>\n\n'
+        'Напишите мне <b>логин</b> Вашей школы еще раз:',
+        chat_id, main_message_id, parse_mode="html", reply_markup=keyboard)
+
+# - Подтверждение второго этапа регистрации
 
 def ConfirmSignInStage2(schoolLogin, messageData, main_message_id, role, schoolName='ЗдесьБуквальноНичегоНету'):
-    if role == "Teacher" or role == "Student":
-        print()
-    else:
-        keyboard = types.InlineKeyboardMarkup()
-        button_confirm = types.InlineKeyboardButton(text="Да, все верно", callback_data="confirmSignInStage2")
-        keyboard.add(button_confirm)
-        button_edit = types.InlineKeyboardButton(text="Нет, мне нужно кое-что изменить", callback_data="editSignInStage2")
-        keyboard.add(button_edit)
+    keyboard = types.InlineKeyboardMarkup()
+    button_confirm = types.InlineKeyboardButton(text="Да, все верно", callback_data="confirmSignInStage2")
+    keyboard.add(button_confirm)
+    button_edit = types.InlineKeyboardButton(text="Нет, мне нужно кое-что изменить", callback_data="editSignInStage2")
+    keyboard.add(button_edit)
+    button_previous = types.InlineKeyboardButton(text="Назад", callback_data="previous")
+    keyboard.add(button_previous)
 
-        if role == "Principal":
-             bot.edit_message_text(f"Я создам школу <b>{schoolName},</b> которая также будет известна под логином <b>{schoolLogin}</b>\n\nВсе верно?",
-                                   messageData.from_user.id, main_message_id, parse_mode="html", reply_markup=keyboard)
-        elif role == "Teacher":
-            bot.edit_message_text(f"Я отправлю заявку на вступление (и получение роли учителя) в школу под названием <b>{schoolName}</b>, '
-                                  'также известную как <b>{schoolLogin}</b>'
-                                  '\n\nВсе верно?",
-                                   messageData.from_user.id, main_message_id, parse_mode="html", reply_markup=keyboard)
-        else:
-            bot.edit_message_text(f"Я отправлю заявку на вступление в школу под названием <b>{schoolName}</b>, '
-                                  'также известную как <b>{schoolLogin}</b>'
-                                  '\n\nВсе верно?",
-                                   messageData.from_user.id, main_message_id, parse_mode="html", reply_markup=keyboard)
+    if role == "Principal" and Schools.getSchoolData(schoolLogin) is None:
+        bot.edit_message_text(f"Я создам школу <b>{schoolName},</b> которая также будет известна под логином <b>{schoolLogin}</b>\n\nВсе верно?",
+                              messageData.from_user.id, main_message_id, parse_mode="html", reply_markup=keyboard)
+    elif role == "Teacher":
+        bot.edit_message_text(f'Я отправлю заявку на вступление (и получение роли учителя) в школу под названием <b>{Schools.getSchoolData(schoolLogin)[1]}</b>, '
+                              f'также известную как <b>{schoolLogin}</b>'
+                              '\n\nВсе верно?',
+                                messageData.from_user.id, main_message_id, parse_mode="html", reply_markup=keyboard)
+    else:
+        bot.edit_message_text(f'Я отправлю заявку на вступление в школу под названием <b>{Schools.getSchoolData(schoolLogin)[1]}</b>, '
+                              f'также известную как <b>{schoolLogin}</b>'
+                              '\n\nВсе верно?',
+                              messageData.from_user.id, main_message_id, parse_mode="html", reply_markup=keyboard)
+
+# - Подтверждение регистрации
+
+def ConfirmSignIn(callbackData, main_message_id):
+    keyboard = types.InlineKeyboardMarkup()
+    button_finish = types.InlineKeyboardButton(text="Закончить регистрацию", callback_data="finishSignIn")
+    keyboard.add(button_finish)
+    button_previous = types.InlineKeyboardButton(text="Отменить регистрацию", callback_data="previous")
+    keyboard.add(button_previous)
+    
+    bot.edit_message_text('Вот и все! Ваш аккаунт почти создан\n\n'
+    'Дополнительную информацию о Вас Вы сможете добавить к Вашему профилю в настройках в любое время'
+    '\n\nДля входа в Ваш аккаунт будет использоваться <b>Ваш аккаунт Telegram</b>'
+    '\n\nЧтобы завершить регистрацию и создать аккаунт, нажмите на кнопку "Закончить регистрацию"',
+    callbackData.message.chat.id, main_message_id, parse_mode="html", reply_markup=keyboard)
