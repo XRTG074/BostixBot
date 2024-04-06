@@ -13,6 +13,9 @@ global tempSurname
 global tempName
 global tempPatronymic
 
+# - Переменные для временного хранения перед отправкой в базу данных школ
+global tempSchoolLogin
+global tempSchoolName
 
 # - Инициализация бота в другом файле
 
@@ -54,6 +57,22 @@ def getMessage(messageData):
             current_menu = "SignInStage1_Confrim"
 
             Messaging.ConfirmSignInStage1(tempSurname, tempName, tempPatronymic, messageData, main_message_id)
+
+    # - Получение логина и названия школы
+
+    elif "SignInStage2_School" in current_menu:
+        if current_menu == "SignInStage2_SchoolCreateLogin":
+            current_menu = "SignInStage2_SchoolCreateName"
+
+            tempSchoolLogin = messageData.text
+
+            Messaging.SignInStage2(None, main_message_id, current_menu, tempRole)
+        elif current_menu == "SignInStage2_SchoolCreateName":
+            current_menu = "SignInStage2_Confirm"
+
+            tempSchoolName = messageData.text
+
+            Messaging.ConfirmSignInStage2(tempSchoolLogin, messageData, main_message_id, tempRole, tempSchoolName)
 
 ### - Обработчик Inline клавиатуры
 @bot.callback_query_handler(func=lambda call: True)
@@ -98,6 +117,20 @@ def getCallback(callbackData):
         current_menu = "SignInStage1_Surname"
 
         Messaging.SignInStage1(callbackData.message.chat.id, main_message_id, current_menu)
+    
+    # - Начало второго этапа регистрации
+
+    elif callbackData.data == "confirmSignInStage1":
+        current_menu = "SignInStage2_SchoolAdd"
+
+        Messaging.SignInStage2(callbackData, main_message_id, current_menu, tempRole)
+
+    # - Обработка нажатия кнопки "Создать школу"
+
+    elif callbackData.data == "createSchool":
+        current_menu = "SignInStage2_SchoolCreateLogin"
+
+        Messaging.SignInStage2(callbackData, main_message_id, current_menu, tempRole)
 
 
 bot.polling(none_stop=True, interval=0) # - Ожидание сообщения от пользователя

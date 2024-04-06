@@ -109,8 +109,82 @@ def ConfirmSignInStage1(surname, name, patronymic, messageData, main_message_id)
     keyboard = types.InlineKeyboardMarkup()
     button_confirm = types.InlineKeyboardButton(text="Да, все верно", callback_data="confirmSignInStage1")
     keyboard.add(button_confirm)
-    button_edit = types.InlineKeyboardButton(text="Нет, мне нужно кое-что изменить", callback_data="editSignInProfileData")
+    button_edit = types.InlineKeyboardButton(text="Нет, мне нужно кое-что изменить", callback_data="editSignInStage1")
     keyboard.add(button_edit)
 
     bot.edit_message_text(f"Вас зовут: <b>{surname.capitalize()} {name.capitalize()} {patronymic.capitalize()}</b>, все верно?",
                           messageData.chat.id, main_message_id, parse_mode="html", reply_markup=keyboard)
+
+# - Второй этап регистрации
+
+def SignInStage2(callbackData, main_message_id, current_menu, role):
+    print(current_menu)
+    if current_menu == "SignInStage2_SchoolAdd":
+        keyboard = types.InlineKeyboardMarkup()
+
+        if role == "Principal":
+            button_createSchool = types.InlineKeyboardButton(text="Создать школу", callback_data="createSchool")
+            keyboard.add(button_createSchool)
+
+        button_linkSchool = types.InlineKeyboardButton(text="Привязать школу", callback_data="linkSchool")
+        keyboard.add(button_linkSchool)
+        button_skip = types.InlineKeyboardButton(text="Пропустить этот шаг", callback_data="skipSchoolAdd")
+        keyboard.add(button_skip)
+
+        if role == "Teacher":
+            bot.edit_message_text('Окей, тогда продолжаем:\n\n\nЕсли Ваш директор/управляющее лицо создало электронную школу в моей базе данных, '
+                                  'Вы можете присоединиться к ней введя ее уникальный <b>логин</b>, который можно узнать у одного из лиц, '
+                                  'имеющих к нему доступ\n\nПосле того, как Вашу заявку одобрят, и подтвердят Ваш статус учителя, '
+                                  'Вы сможете создать класс и добавить туда Ваших учеников'
+                                  '\n\nЕсли у Вас есть <b>логин</b> Вашей школы, нажмите на кнопку "Привязать школу"'
+                                  '\n\nВ противном случае нажмите на кнопку "Пропустить этот шаг"\nВы сможете создать/привязать школу позже, в настройках Вашего профиля',
+                                    callbackData.message.chat.id, main_message_id, parse_mode="html", reply_markup=keyboard)
+        elif role == "Student":
+            bot.edit_message_text('Окей, тогда продолжаем:\n\n\nЕсли Ваш директор/управляющее лицо создало электронную школу в моей базе данных, '
+                                  'Вы можете присоединиться к ней введя ее уникальный <b>логин</b>, который можно узнать у одного из лиц, имеющих к нему доступ'
+                                  '\n\nПосле того, как Вашу заявку одобрят, Ваш учитель/классный руководитель сможет добавить Вас в Ваш класс'
+                                  '\n\nЕсли у Вас есть <b>логин</b> Вашей школы, нажмите на кнопку "Привязать школу"'
+                                  '\n\nВ противном случае нажмите на кнопку "Пропустить этот шаг"'
+                                  '\nВы сможете создать/привязать школу позже, в настройках Вашего профиля',
+                                  callbackData.message.chat.id, main_message_id, parse_mode="html", reply_markup=keyboard)
+        else:
+            bot.edit_message_text('Окей, тогда продолжаем:\n\n\nСейчас Вы можете создать свою школу, куда Вы добавите всех учителей, '
+                                  'а они в свою очередь всех своих учеников\n\nВы можете создать школу прямо сейчас - это не сложно!'
+                                  '\nНажмите на кнопку "Создать школу", и Я все Вам объясню\n\nБыть может, кто-то из важных лиц Вашей школы уже создал ее?'
+                                   ' - Тогда Вы можете присоединиться к ней, введя ее уникальный <b>логин</b>, который Вы можете узнать у одного из лиц, имеющих к нему доступ'
+                                   '\n\nЕсли у Вас есть <b>логин</b> Вашей школы, нажмите на кнопку "Привязать школу"'
+                                   '\n\nВ противном случае нажмите на кнопку "Пропустить этот шаг"\nВы сможете создать/привязать школу позже, в настройках Вашего профиля',
+                                   callbackData.message.chat.id, main_message_id, parse_mode="html", reply_markup=keyboard)
+
+    elif current_menu == "SignInStage2_SchoolCreateLogin":
+            bot.edit_message_text('Тогда вперед!\n\nПридумайте <b>логин</b> Вашей школы'
+                                  '\nОн будет использоваться как второе имя Вашей школы и для ряда других вещей'
+                                  '\n\nНапишите мне <b>логин</b> вашей школы:',
+                                  callbackData.from_user.id, main_message_id, parse_mode="html")
+    elif current_menu == "SignInStage2_SchoolCreateName":
+            bot.edit_message_text("И последний рывок:\n\nТеперь напишите мне название Вашей школы", 
+                                  callbackData.from_user.id, main_message_id, parse_mode="html")
+
+def ConfirmSignInStage2(schoolLogin, messageData, main_message_id, role, schoolName='ЗдесьБуквальноНичегоНету'):
+    if role == "Teacher" or role == "Student":
+        print()
+    else:
+        keyboard = types.InlineKeyboardMarkup()
+        button_confirm = types.InlineKeyboardButton(text="Да, все верно", callback_data="confirmSignInStage2")
+        keyboard.add(button_confirm)
+        button_edit = types.InlineKeyboardButton(text="Нет, мне нужно кое-что изменить", callback_data="editSignInStage2")
+        keyboard.add(button_edit)
+
+        if role == "Principal":
+             bot.edit_message_text(f"Я создам школу <b>{schoolName},</b> которая также будет известна под логином <b>{schoolLogin}</b>\n\nВсе верно?",
+                                   messageData.from_user.id, main_message_id, parse_mode="html", reply_markup=keyboard)
+        elif role == "Teacher":
+            bot.edit_message_text(f"Я отправлю заявку на вступление (и получение роли учителя) в школу под названием <b>{schoolName}</b>, '
+                                  'также известную как <b>{schoolLogin}</b>'
+                                  '\n\nВсе верно?",
+                                   messageData.from_user.id, main_message_id, parse_mode="html", reply_markup=keyboard)
+        else:
+            bot.edit_message_text(f"Я отправлю заявку на вступление в школу под названием <b>{schoolName}</b>, '
+                                  'также известную как <b>{schoolLogin}</b>'
+                                  '\n\nВсе верно?",
+                                   messageData.from_user.id, main_message_id, parse_mode="html", reply_markup=keyboard)
