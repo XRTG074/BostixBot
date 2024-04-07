@@ -1,14 +1,12 @@
 import telebot
 
-import asyncio
-
 import BostixActions.Messaging.MessagingActions as Messaging
 
 import BostixData.Users.UsersData as Users
 import BostixData.Schools.SchoolsData as Schools
 import BostixData.Schools.SchoolData as School
 
-bot = telebot.TeleBot("МестоДляОченьКрутогоТокена") # - Бот
+bot = telebot.TeleBot("МестоДляОченьКрутогоТокена") # - Бот 
 
 main_message_id = 0 # ID главного сообщения, где будет происходить все
 
@@ -28,6 +26,11 @@ tempSchoolName = None
 global tempGradeName
 global tempGradeLevel
 
+# - Переменные для временного хранения перед отправкой в функцию PrintLearn
+global tempLearnGrade
+global tempLearnSubject
+global tempLearnTopic
+
 global joinRequests # - Короутина для последовательного вывода заявок на вступление в школу
 joinRequests = None
 
@@ -41,6 +44,17 @@ def getMessage(messageData):
 
     global current_menu
     
+    # - Проверка на наличие DeepLink в сообщении
+
+    command = messageData.text.split()
+
+    if len(command) > 1 and current_menu == "GradesList":
+        parameter = command[1]
+        if parameter.split("_")[0] == "grade":
+            current_menu = "GradeData"
+
+            Messaging.showGrade(parameter.split("_")[1], messageData.from_user.id, main_message_id)
+
     # - Проверка на наличие аккаунта в базе данных
 
     if messageData.text == "/start" and current_menu == "None" and not Users.getUserData(messageData.from_user.id) is None:
@@ -181,7 +195,37 @@ def getCallback(callbackData):
         current_menu = "AfterPreSignIn"
 
         Messaging.AfterPreSignIn(callbackData, main_message_id)
+
+    elif callbackData.data == "learnMaterials":
+        current_menu = "LearnMaterials_Grade"
+
+        Messaging.LearnMenu(callbackData.message.chat.id, main_message_id, current_menu)
     
+    elif "learn" in callbackData.data:
+        if len(callbackData.data) <= 7 and not "-" in callbackData.data:
+            if callbackData.data == "learn8":
+                current_menu = "LearnMaterials_Subject"
+
+                global tempLearnGrade
+                tempLearnGrade = "8"
+                Messaging.LearnMenu(callbackData.message.chat.id, main_message_id, current_menu)
+        elif len(callbackData.data) > 7 and not "-" in callbackData.data:
+            if callbackData.data == "learn8physics":
+                current_menu = "LearnMaterials_Topic"
+
+                global tempLearnSubject
+                tempLearnSubject = "physics"
+                Messaging.LearnMenu(callbackData.message.chat.id, main_message_id, current_menu)
+        elif "-" in callbackData.data:
+            if callbackData.data == "learn8physics-1":
+                current_menu = "LearnMaterials_Learn"
+
+                global tempLearnTopic
+                tempLearnTopic = "-1"
+                Messaging.PrintLearn(callbackData.message.chat.id, main_message_id, f'{tempLearnGrade}{tempLearnSubject}{tempLearnTopic}')
+
+
+
     # - Обработка нажатия кнопки "Зарегистрироваться"
   
     elif callbackData.data == "signIn":
@@ -229,18 +273,17 @@ def getCallback(callbackData):
                 else:
                     tempSchoolLogin = f'PendingRequest-{tempSchoolLogin}'
         
-        Users.AddNewUser(callbackData.message.chat.id, f'{tempSurname}.{tempName}.{tempPatronymic}', tempSchoolLogin)
+        Users.AddNewUser(callbackData.message.chat.id, f'{tempSurname.capitalize()}.{tempName.capitalize()}.{tempPatronymic.capitalize()}', tempSchoolLogin)
         
         if tempRole == "Principal" and not tempSchoolName is None:
             Schools.AddNewSchool(tempSchoolLogin, tempSchoolName)
-            School.AddNewMemberToSchool(callbackData.message.chat.id, tempSchoolLogin, "Principal", "Директор")
+            School.AddNewMemberToSchool(callbackData.message.chat.id, tempSchoolLogin, "Principal", "None")
 
 
     elif callbackData.data == "checkRequests":
         current_menu = "JoinRequests"
 
         joinRequests.send(None)
-
     elif callbackData.data == "skipRequest":
         joinRequests.send(None)
 
@@ -270,7 +313,7 @@ def getCallback(callbackData):
     elif "confirmNewGrade" in callbackData.data:
         current_menu = "GradesList"
 
-        School.AddNewGrade(callbackData.data.split("_")[1], tempGradeName, tempGradeLevel, callbackData.message.chat.id)
+        School.AddNewGrade(callbackData.data.split("_")[1], tempGradeName, callbackData.message.chat.id, tempGradeLevel)
         Messaging.gradesList(callbackData.message.chat.id, main_message_id)
     elif callbackData.data == "previous":
         if current_menu == "PreSignIn":
@@ -295,6 +338,23 @@ def getCallback(callbackData):
                 current_menu = "SignInStage1_Name"
 
                 Messaging.SignInStage1(callbackData.message.chat.id, main_message_id, current_menu)
+
+        elif current_menu == "LearnMaterials_Grade":
+            current_menu = "MainMenu"
+
+            Messaging.MainMenu(callbackData.message.chat.id, main_message_id)
+        if current_menu == "LearnMaterials_Subject":
+            current_menu = "LearnMaterials_Grade"
+
+            Messaging.LearnMenu(callbackData.message.chat.id, main_message_id, current_menu)
+        elif current_menu == "LearnMaterials_Topic":
+            current_menu = "LearnMaterials_Subject"
+
+            Messaging.LearnMenu(callbackData.message.chat.id, main_message_id, current_menu)
+        elif current_menu == "LearnMaterials_Learn":
+            current_menu = "LearnMaterials_Topic"
+
+            Messaging.LearnMenu(callbackData.message.chat.id, main_message_id, current_menu)
         elif current_menu == "SignInStage1_Confirm":
             current_menu = "AfterPreSignIn"
 
@@ -334,7 +394,10 @@ def getCallback(callbackData):
             current_menu = "MainMenu"
 
             Messaging.MainMenu(callbackData.message.chat.id, main_message_id)
-        
+        elif current_menu == "GradeData":
+            current_menu = "GradesList"
+
+            Messaging.gradesList(callbackData.message.chat.id, main_message_id)
         elif "GradeCreate" in current_menu:
             if current_menu == "GradeCreate_Name":
                 current_menu = "GradesList"

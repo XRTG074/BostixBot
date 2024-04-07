@@ -44,7 +44,7 @@ def AddNewGrade(schoolLogin, gradeName, headTeacherID, gradeLevel):
 
     dataFile.close()
 
-    AddNewMemberToGrade(schoolLogin, gradeName, headTeacherID, "Teacher", "Классный руководитель")
+    AddNewMemberToGrade(schoolLogin, gradeName, headTeacherID, "Teacher", "None")
 
 # - Добавление нового участника в класс
 
@@ -82,6 +82,17 @@ def getUserData(schoolLogin, userID):
     dataBase.execute(f"SELECT role, customRole, gradeName FROM schoolMembersData WHERE userID == ?", (userID,))
     return dataBase.fetchone()
 
+# - Получение определенного класса
+
+def getGrade(schoolLogin, gradeName):
+    dataFile = sqlite3.connect(f"BostixData/Data/Schools/school_{schoolLogin}.db") # - Файл базы данных
+
+    dataBase = dataFile.cursor()
+
+    dataBase.execute(f'SELECT * FROM {gradeName}_gradeMembersData')
+    return dataBase.fetchall()
+
+
 # - Получение всех классов
 
 def getAllGrades(schoolLogin):
@@ -90,7 +101,7 @@ def getAllGrades(schoolLogin):
     dataBase = dataFile.cursor()
 
     try:
-        dataBase.execute(f'SELECT * FROM schoolGradesData')
+        dataBase.execute('SELECT * FROM schoolGradesData')
         return dataBase.fetchall()
     except:
         return None

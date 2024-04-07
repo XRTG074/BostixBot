@@ -8,6 +8,12 @@ import BostixData.Users.UsersData as Users # - Библиотека для ра�
 import BostixData.Schools.SchoolsData as Schools # - Библиотека для работы с базой данных школ
 import BostixData.Schools.SchoolData as School
 
+import BostixActions.Learn.LearnMaterials as Learn
+
+
+global BotLink
+BotLink = "КрутаяСсылкаНаВашегоНевероятногоБота"
+
 # - Инициализация бота
 
 def InitBot(_bot):
@@ -75,7 +81,7 @@ def AfterPreSignIn(callbackData, main_message_id):
     elif callbackData.data == "student":
         button_learnMaterials = types.InlineKeyboardButton(text="Лекционные материалы", callback_data="learnMaterials")
         keyboard.add(button_learnMaterials)
-        button_testExams = types.InlineKeyboardButton(text="Пробные экзамены", callback_data="testExams")
+        button_testExams = types.InlineKeyboardButton(text="Пробные экзамены - В РАЗРАБОТКЕ(", callback_data="testExams")
         keyboard.add(button_testExams)
     button_previous = types.InlineKeyboardButton(text="Вернуться к предыдущему шагу", callback_data="previous")
     keyboard.add(button_previous)
@@ -138,8 +144,6 @@ def ConfirmSignInStage1(surname, name, patronymic, chat_id, main_message_id):
     keyboard = types.InlineKeyboardMarkup()
     button_confirm = types.InlineKeyboardButton(text="Да, все верно", callback_data="confirmSignInStage1")
     keyboard.add(button_confirm)
-    button_edit = types.InlineKeyboardButton(text="Нет, мне нужно кое-что изменить", callback_data="editSignInStage1")
-    keyboard.add(button_edit)
     button_previous = types.InlineKeyboardButton(text="Назад", callback_data="previous")
     keyboard.add(button_previous)
 
@@ -230,8 +234,6 @@ def ConfirmSignInStage2(schoolLogin, messageData, main_message_id, role, schoolN
     keyboard = types.InlineKeyboardMarkup()
     button_confirm = types.InlineKeyboardButton(text="Да, все верно", callback_data="confirmSignInStage2")
     keyboard.add(button_confirm)
-    button_edit = types.InlineKeyboardButton(text="Нет, мне нужно кое-что изменить", callback_data="editSignInStage2")
-    keyboard.add(button_edit)
     button_previous = types.InlineKeyboardButton(text="Назад", callback_data="previous")
     keyboard.add(button_previous)
 
@@ -303,19 +305,18 @@ def MainMenu(chat_id, main_message_id=0):
         gradePhrase = f'Класс: Вы не состоите ни в одном классе'
 
     if School.getUserData(userData[2], chat_id)[0] == "Principal":
-        if not Users.getUserRequests(userData[2]) is None:
+        if not len(Users.getUserRequests(userData[2])) == 0:
             notification = f'<i>У Вас есть одна/несколько заявок на вступление в Вашу школу\nВы можете принять или отклонить их, предварительно проверив данные учеников/учителей\nПросто нажмите на кнопку "Заявки на вступление"</i>'
             button_checkRequests = types.InlineKeyboardButton(text="Заявки на вступление", callback_data="checkRequests")
             keyboard.add(button_checkRequests)
         button_gradesList = types.InlineKeyboardButton(text="Список классов", callback_data="gradesList")
         keyboard.add(button_gradesList)
-        button_schoolMembersList = types.InlineKeyboardButton(text="Список участников школы", callback_data="schoolMembersList")
-        keyboard.add(button_schoolMembersList)
     elif School.getUserData(userData[2], chat_id)[0] == "Teacher":
         button_gradesList = types.InlineKeyboardButton(text="Ваши классы", callback_data="gradesList")
         keyboard.add(button_gradesList)
-        button_schoolMembersList = types.InlineKeyboardButton(text="Список Ваших учеников", callback_data="schoolMembersList")
-        keyboard.add(button_schoolMembersList)
+
+    button_learnMaterials = types.InlineKeyboardButton(text="Лекционные материалы", callback_data="learnMaterials")
+    keyboard.add(button_learnMaterials)
 
     realName = userData[0].split(".")
     current_time = datetime.now()
@@ -342,10 +343,25 @@ def MainMenu(chat_id, main_message_id=0):
                             f'\n\nВаш {gradePhrase}'
                             f'\n\n\n<b>Важные сообщения:</b>\n{notification}',
                             parse_mode="html", reply_markup=keyboard)
+        elif School.getUserData(userData[2], chat_id)[0] == "Teacher":
+            bot.send_message(chat_id, f'Здравствуйте, <b>{realName[1]}</b>\n\nСегодня - {current_time.day}.{current_time.month}.{current_time.year}, {current_weekday} по времени сервера'
+                            f'\n\n{schoolPhrase}'
+                            f'\n\n{gradePhrase}'
+                            f'\n\n\n<b>Важные сообщения:</b>\n{notification}',
+                            parse_mode="html", reply_markup=keyboard)
     else:
-        bot.edit_message_text(f'Здравствуйте, <b>{realName[1]}</b>!\n\nСегодня: {current_time.day}.{current_time.month}.{current_time.year}\n\n'
-                              f'{schoolPhrase}', 
-                              chat_id, main_message_id, parse_mode="html")
+        if School.getUserData(userData[2], chat_id)[0] == "Principal":
+            bot.edit_message_text(f'Здравствуйте, <b>{realName[1]}</b>\n\nСегодня - {current_time.day}.{current_time.month}.{current_time.year}, {current_weekday} по времени сервера'
+                            f'\n\nВаша {schoolPhrase}'
+                            f'\n\nВаш {gradePhrase}'
+                            f'\n\n\n<b>Важные сообщения:</b>\n{notification}',
+                            chat_id, main_message_id, parse_mode="html", reply_markup=keyboard)
+        elif School.getUserData(userData[2], chat_id)[0] == "Teacher":
+            bot.edit_message_text(f'Здравствуйте, <b>{realName[1]}</b>\n\nСегодня - {current_time.day}.{current_time.month}.{current_time.year}, {current_weekday} по времени сервера'
+                            f'\n\n{schoolPhrase}'
+                            f'\n\n{gradePhrase}'
+                            f'\n\n\n<b>Важные сообщения:</b>\n{notification}',
+                            chat_id, main_message_id, parse_mode="html", reply_markup=keyboard)
         
 
 # - Меню заявок на вступление в школу
@@ -376,8 +392,25 @@ async def JoinRequests(callbackData, main_message_id):
                                  f'\n\nПользователь: <b>{realName[0]} {realName[1]} {realName[2]}</b>, @XRTG074'
                                  f'\n\nЗапрос на вступление в школу как ученик',
                                  callbackData.message.chat.id, main_message_id, parse_mode="html", reply_markup=keyboard)
+        elif Users.getUserData(request[0])[2].split("-")[0] == "PendingTeacherRequest":
+            keyboard = types.InlineKeyboardMarkup()
+
+            button_accept = types.InlineKeyboardButton(text="Принять заявку", callback_data=f'acceptRequest_{request[0]}')
+            keyboard.add(button_accept)
+            button_skip = types.InlineKeyboardButton(text="Пропустить заявку", callback_data="skipRequest")
+            keyboard.add(button_skip)
+            button_reject = types.InlineKeyboardButton(text="Отклонить заявку", callback_data=f'rejectRequest_{request[0]}')
+            keyboard.add(button_reject)
+            button_previous = types.InlineKeyboardButton(text="Назад в меню", callback_data="previous")
+            keyboard.add(button_previous)
+
+            bot.edit_message_text(f'<b>Заявка на вступление:</b>'
+                                 f'\n\nПользователь: <b>{realName[0]} {realName[1]} {realName[2]}</b>, @XRTG074'
+                                 f'\n\nЗапрос на вступление в школу как учитель',
+                                 callbackData.message.chat.id, main_message_id, parse_mode="html", reply_markup=keyboard)
             
         await asyncio.sleep(0)
+    keyboard = None    
     keyboard = types.InlineKeyboardMarkup()
 
     button_previous = types.InlineKeyboardButton(text="Назад в меню", callback_data="previous")
@@ -408,12 +441,43 @@ def gradesList(chat_id, main_message_id):
                               chat_id, main_message_id, parse_mode="html", reply_markup=keyboard)
         else:
             for grade in grades:
-                print(grade)
-                realName = Users.getUserData(grade[2])[0].split(".")
+                
+                global BotLink
 
-                gradesTable = gradesTable + f'\n\nКласс: <b>{grade[0]}</b>. Классный руководитель - <b>{realName[0]} {realName[1]} {realName[2]}</b>'
+                realName = Users.getUserData(grade[1])[0].split(".")
+
+                gradesTable = gradesTable + f'\n\nКласс: <a href="{BotLink}?start=grade_{grade[0]}"><b>{grade[0]}</b></a>. Классный руководитель - <b>{realName[0]} {realName[1]} {realName[2]}</b>'
             bot.edit_message_text(gradesTable,
                                   chat_id, main_message_id, parse_mode="html", reply_markup=keyboard)
+            
+# - Показ определенного класса
+
+def showGrade(gradeName, chat_id, main_message_id):
+    keyboard = types.InlineKeyboardMarkup()
+
+    keyboard = types.InlineKeyboardMarkup()
+    button_previous = types.InlineKeyboardButton(text="Вернуться к предыдущему шагу", callback_data="previous")
+    keyboard.add(button_previous)
+
+    grade = School.getGrade(Users.getUserData(chat_id)[2], gradeName)
+
+    userData = Users.getUserData(grade[0][0])
+    realName = userData[0].split(".")
+
+    gradeTable = f"Класс {gradeName}:\n\nКлассный руководитель - <b>{realName[0]} {realName[1]} {realName[2]}</b>\n\nУченики:"
+
+    i = 1
+
+    for user in grade:
+
+        if i != 1:
+            userData = Users.getUserData(user[0])
+            realName = userData[0].split(".")
+
+            gradeTable = gradeTable + f'\n\n# {i}. <b>{realName[0]} {realName[1]} {realName[2]}</b>'
+
+    bot.edit_message_text({gradeTable},
+                          chat_id, main_message_id, parse_mode="html", reply_markup=keyboard)
             
 # - Создание нового класса
 
@@ -446,3 +510,46 @@ def ConfrimNewGrade(chat_id, main_message_id, gradeName, gradeLevel):
 
     bot.edit_message_text(f'Я создам класс под названием <b>{gradeName}</b> уровня <b>{gradeLevel}</b> класса\n\nВсе верно?',
                              chat_id, main_message_id, parse_mode="html", reply_markup=keyboard)
+    
+# - Открытие меню лекционных материалов
+
+def LearnMenu(chat_id, main_message_id, current_menu):
+    keyboard = types.InlineKeyboardMarkup()
+
+    if current_menu == "LearnMaterials_Grade":
+        button_learn8 = types.InlineKeyboardButton(text='8 класс', callback_data="learn8")
+        keyboard.add(button_learn8)
+        button_previous = types.InlineKeyboardButton(text="Вернуться к предыдущему шагу", callback_data="previous")
+        keyboard.add(button_previous)
+
+        bot.edit_message_text('Хорошо!\n\nТогда выберите необходимый Вам класс (Будучи на стадии ранней разработки, Я могу предоставить только одну лекцию по физике за 8 класс):',
+                             chat_id, main_message_id, parse_mode="html", reply_markup=keyboard)
+    elif current_menu == "LearnMaterials_Subject":
+        button_learn8physics = types.InlineKeyboardButton(text='Физика', callback_data="learn8physics")
+        keyboard.add(button_learn8physics)
+        button_previous = types.InlineKeyboardButton(text="Вернуться к предыдущему шагу", callback_data="previous")
+        keyboard.add(button_previous)
+
+        bot.edit_message_text('Отлично!\n\nТеперь выберите необходимый Вам предмет (Будучи на стадии ранней разработки, Я могу предоставить только одну лекцию по физике за 8 класс):',
+                             chat_id, main_message_id, parse_mode="html", reply_markup=keyboard)
+    else:
+        button_learn8physics1 = types.InlineKeyboardButton(text='Тепло. Температура', callback_data="learn8physics-1")
+        keyboard.add(button_learn8physics1)
+        button_previous = types.InlineKeyboardButton(text="Вернуться к предыдущему шагу", callback_data="previous")
+        keyboard.add(button_previous)
+
+        bot.edit_message_text('Ну и наконец:\n\nВыберите необходимую Вам тему (Будучи на стадии ранней разработки, Я могу предоставить только одну лекцию по физике за 8 класс):',
+                             chat_id, main_message_id, parse_mode="html", reply_markup=keyboard)
+        
+# - Вывод лекционного материала
+
+def PrintLearn(chat_id, main_message_id, material):
+    keyboard = types.InlineKeyboardMarkup()
+
+    button_previous = types.InlineKeyboardButton(text="Вернуться к предыдущему шагу", callback_data="previous")
+    keyboard.add(button_previous)
+
+    material = Learn.getMaterial(material)
+
+    bot.edit_message_text(f'{material}',
+                          chat_id, main_message_id, parse_mode="html", reply_markup=keyboard)
