@@ -1,9 +1,12 @@
 import telebot
 
+import asyncio
+
 import BostixActions.Messaging.MessagingActions as Messaging
 
 import BostixData.Users.UsersData as Users
 import BostixData.Schools.SchoolsData as Schools
+import BostixData.Schools.SchoolData as School
 
 bot = telebot.TeleBot("МестоДляОченьКрутогоТокена") # - Бот
 
@@ -21,6 +24,13 @@ global tempSchoolLogin
 global tempSchoolName
 tempSchoolName = None
 
+# - Переменные для временного хранения перед отправкой в базу данных классов
+global tempGradeName
+global tempGradeLevel
+
+global joinRequests # - Короутина для последовательного вывода заявок на вступление в школу
+joinRequests = None
+
 # - Инициализация бота в другом файле
 
 Messaging.InitBot(bot)
@@ -30,10 +40,17 @@ Messaging.InitBot(bot)
 def getMessage(messageData):
 
     global current_menu
-        
+    
+    # - Проверка на наличие аккаунта в базе данных
+
+    if messageData.text == "/start" and current_menu == "None" and not Users.getUserData(messageData.from_user.id) is None:
+        current_menu = "MainMenu"
+
+        Messaging.MainMenu(messageData.from_user.id)
+
     # - Обработка сообщения "/start" от пользователя
 
-    if messageData.text == "/start" and current_menu == "None":
+    elif messageData.text == "/start" and current_menu == "None":
             
             current_menu = "Greeting"
 
@@ -97,6 +114,32 @@ def getMessage(messageData):
                 else:
                     Messaging.ConfirmSignInStage2(tempSchoolLogin, messageData, main_message_id, tempRole)
 
+    elif "GradeCreate" in current_menu:
+        if current_menu == "GradeCreate_Name":
+            global tempGradeName
+
+            tempGradeName = messageData.text
+
+            current_menu = "GradeCreate_Level"
+
+            Messaging.NewGrade(messageData.from_user.id, main_message_id, current_menu)
+        else:
+            global tempGradeLevel
+
+            try:
+                if 1 <= int(messageData.text)  <= 11:
+                    tempGradeLevel = messageData.text
+
+                    current_menu = "NewGrade_Confirm"
+
+                    Messaging.ConfrimNewGrade(messageData.from_user.id, main_message_id, tempGradeName, tempGradeLevel)
+            except:
+                if current_menu != "GradeCreate_LevelAgain":
+                    current_menu = "GradeCreate_LevelAgain"
+
+                    Messaging.NewGrade(messageData.from_user.id, main_message_id, current_menu)
+
+
     bot.delete_message(messageData.from_user.id, messageData.id)
 
 ### - Обработчик Inline клавиатуры
@@ -104,14 +147,17 @@ def getMessage(messageData):
 def getCallback(callbackData):
 
     global current_menu
+    global main_message_id
+    global joinRequests
 
     if current_menu == "None":
         return
-
-    global main_message_id
     
     if main_message_id == 0:
         main_message_id = callbackData.message.id
+    
+    if joinRequests is None:
+        joinRequests = Messaging.JoinRequests(callbackData, main_message_id)
 
     # - Обработка нажатия кнопки "НАЧАТЬ"
 
@@ -178,12 +224,54 @@ def getCallback(callbackData):
         current_menu = "MainMenu"
         if not tempSchoolLogin is None:
             if not Schools.getSchoolData(tempSchoolLogin) is None:
-                tempSchoolLogin = f'PendingRequest-{tempSchoolLogin}'
+                if tempRole == "Teacher":
+                    tempSchoolLogin = f'PendingTeacherRequest-{tempSchoolLogin}'
+                else:
+                    tempSchoolLogin = f'PendingRequest-{tempSchoolLogin}'
         
         Users.AddNewUser(callbackData.message.chat.id, f'{tempSurname}.{tempName}.{tempPatronymic}', tempSchoolLogin)
         
         if tempRole == "Principal" and not tempSchoolName is None:
             Schools.AddNewSchool(tempSchoolLogin, tempSchoolName)
+            School.AddNewMemberToSchool(callbackData.message.chat.id, tempSchoolLogin, "Principal", "Директор")
+
+
+    elif callbackData.data == "checkRequests":
+        current_menu = "JoinRequests"
+
+        joinRequests.send(None)
+
+    elif callbackData.data == "skipRequest":
+        joinRequests.send(None)
+
+    elif "acceptRequest" in callbackData.data:
+        Users.replyRequestStatus(callbackData.data.split("_")[1], "Accept")
+        try:
+            joinRequests.send(None)
+        except StopIteration:
+            joinRequests = None
+    elif "rejectRequest" in callbackData.data:
+        Users.replyRequestStatus(callbackData.data.split("_")[1], "Reject")
+
+        try:
+            joinRequests.send(None)
+        except StopIteration:
+            joinRequests = None
+    elif callbackData.data == "gradesList":
+        current_menu = "GradesList"
+
+        Messaging.gradesList(callbackData.message.chat.id, main_message_id)
+    elif callbackData.data == "schoolMembersList":
+        print()
+    elif callbackData.data == "createNewGrade":
+        current_menu = "GradeCreate_Name"
+
+        Messaging.NewGrade(callbackData.message.chat.id, main_message_id, current_menu)
+    elif "confirmNewGrade" in callbackData.data:
+        current_menu = "GradesList"
+
+        School.AddNewGrade(callbackData.data.split("_")[1], tempGradeName, tempGradeLevel, callbackData.message.chat.id)
+        Messaging.gradesList(callbackData.message.chat.id, main_message_id)
     elif callbackData.data == "previous":
         if current_menu == "PreSignIn":
             current_menu = "Greeting"
@@ -236,6 +324,34 @@ def getCallback(callbackData):
             current_menu = "AfterPreSignIn"
 
             Messaging.StartPreSignIn(callbackData, main_message_id)
+
+
+        elif current_menu == "JoinRequests":
+            current_menu = "MainMenu"
+
+            Messaging.MainMenu(callbackData.message.chat.id, main_message_id)
+        elif current_menu == "GradesList":
+            current_menu = "MainMenu"
+
+            Messaging.MainMenu(callbackData.message.chat.id, main_message_id)
+        
+        elif "GradeCreate" in current_menu:
+            if current_menu == "GradeCreate_Name":
+                current_menu = "GradesList"
+
+                Messaging.gradesList(callbackData.message.chat.id, main_message_id)
+            elif current_menu == "GradeCreate_Level":
+                current_menu = "GradeCreate_Name"
+
+                Messaging.NewGrade(callbackData.message.chat.id, main_message_id, current_menu)
+            elif current_menu == "GradeCreate_Level":
+                current_menu = "GradeCreate_Name"
+
+                Messaging.NewGrade(callbackData.message.chat.id, main_message_id, current_menu)
+            elif current_menu == "GradeCreate_LevelAgain":
+                current_menu = "GradeCreate_Name"
+
+                Messaging.NewGrade(callbackData.message.chat.id, main_message_id, current_menu)
 
 
 bot.polling(none_stop=True, interval=0) # - Ожидание сообщения от пользователя

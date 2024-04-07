@@ -1,7 +1,12 @@
 from telebot import types # - Библиотека для работы с крутыми штуками Telegram
 
+from datetime import datetime
+
+import asyncio
+
 import BostixData.Users.UsersData as Users # - Библиотека для работы с базой данных пользователей
 import BostixData.Schools.SchoolsData as Schools # - Библиотека для работы с базой данных школ
+import BostixData.Schools.SchoolData as School
 
 # - Инициализация бота
 
@@ -258,3 +263,186 @@ def ConfirmSignIn(callbackData, main_message_id):
     '\n\nДля входа в Ваш аккаунт будет использоваться <b>Ваш аккаунт Telegram</b>'
     '\n\nЧтобы завершить регистрацию и создать аккаунт, нажмите на кнопку "Закончить регистрацию"',
     callbackData.message.chat.id, main_message_id, parse_mode="html", reply_markup=keyboard)
+
+
+# - Главное меню
+      
+def MainMenu(chat_id, main_message_id=0):
+    keyboard = types.InlineKeyboardMarkup()
+
+    userData = Users.getUserData(chat_id)
+
+    schoolID = userData[2]
+
+    notification = "У Вас нет никаких важных сообщений"
+
+    if schoolID.split("-")[0] == "PendingRequest" or schoolID.split("-")[0] == "Rejected" or schoolID.split("-")[0] == "Accepted":
+        schoolData = Schools.getSchoolData(userData[2].split("-")[1])
+    else:
+        schoolData = Schools.getSchoolData(userData[2])
+
+    if len(schoolID.split("-")) > 1:
+        if schoolID.split("-")[0] == "Accepted":
+            schoolPhrase = f' - Ваша заявка на вступление в школу <b>{schoolData[1]}</b> была принята\nДобро пожаловать!'
+            Users.editSchoolID(chat_id)
+        elif schoolID.split("-")[0] == "Rejected":
+            schoolPhrase = f' - Ваша заявка на вступление в школу <b>{schoolData[1]}</b> была отклонена\nВы можете еще раз привязать школу к своему аккаунту из настроек Вашего профиля'
+            Users.editSchoolID(chat_id)
+        elif schoolID.split("-")[0] == "PendingRequest":
+            schoolPhrase = f' - Ваша заявка на вступление в школу <b>{schoolData[1]}</b> еще не одобрена\nПожалуйста, подождите еще немного'
+            Users.editSchoolID(chat_id)
+    else:
+        schoolPhrase = f'Школа: <b>{schoolData[1]}</b>'
+        
+
+    userData = Users.getUserData(chat_id)
+
+    if not School.getUserData(userData[2], chat_id)[2] == "None":
+        gradePhrase = f'Класс: <b>{School.getUserData(userData[2], chat_id)[2]}</b>'
+    else:
+        gradePhrase = f'Класс: Вы не состоите ни в одном классе'
+
+    if School.getUserData(userData[2], chat_id)[0] == "Principal":
+        if not Users.getUserRequests(userData[2]) is None:
+            notification = f'<i>У Вас есть одна/несколько заявок на вступление в Вашу школу\nВы можете принять или отклонить их, предварительно проверив данные учеников/учителей\nПросто нажмите на кнопку "Заявки на вступление"</i>'
+            button_checkRequests = types.InlineKeyboardButton(text="Заявки на вступление", callback_data="checkRequests")
+            keyboard.add(button_checkRequests)
+        button_gradesList = types.InlineKeyboardButton(text="Список классов", callback_data="gradesList")
+        keyboard.add(button_gradesList)
+        button_schoolMembersList = types.InlineKeyboardButton(text="Список участников школы", callback_data="schoolMembersList")
+        keyboard.add(button_schoolMembersList)
+    elif School.getUserData(userData[2], chat_id)[0] == "Teacher":
+        button_gradesList = types.InlineKeyboardButton(text="Ваши классы", callback_data="gradesList")
+        keyboard.add(button_gradesList)
+        button_schoolMembersList = types.InlineKeyboardButton(text="Список Ваших учеников", callback_data="schoolMembersList")
+        keyboard.add(button_schoolMembersList)
+
+    realName = userData[0].split(".")
+    current_time = datetime.now()
+
+    if current_time.weekday() == 0:
+        current_weekday = "Понедельник"
+    elif current_time.weekday() == 1:
+        current_weekday = "Вторник"
+    elif current_time.weekday() == 2:
+        current_weekday = "Среда"
+    elif current_time.weekday() == 3:
+        current_weekday = "Четверг"
+    elif current_time.weekday() == 4:
+        current_weekday = "Пятница"
+    elif current_time.weekday() == 5:
+        current_weekday = "Суббота"
+    elif current_time.weekday() == 6:
+        current_weekday = "Воскресенье"
+
+    if main_message_id == 0:
+        if School.getUserData(userData[2], chat_id)[0] == "Principal":
+            bot.send_message(chat_id, f'Здравствуйте, <b>{realName[1]}</b>\n\nСегодня - {current_time.day}.{current_time.month}.{current_time.year}, {current_weekday} по времени сервера'
+                            f'\n\nВаша {schoolPhrase}'
+                            f'\n\nВаш {gradePhrase}'
+                            f'\n\n\n<b>Важные сообщения:</b>\n{notification}',
+                            parse_mode="html", reply_markup=keyboard)
+    else:
+        bot.edit_message_text(f'Здравствуйте, <b>{realName[1]}</b>!\n\nСегодня: {current_time.day}.{current_time.month}.{current_time.year}\n\n'
+                              f'{schoolPhrase}', 
+                              chat_id, main_message_id, parse_mode="html")
+        
+
+# - Меню заявок на вступление в школу
+
+async def JoinRequests(callbackData, main_message_id):
+    
+    userData = Users.getUserData(callbackData.message.chat.id)
+
+    requests = Users.getUserRequests(userData[2])
+
+    for request in requests:
+
+        realName = Users.getUserData(request[0])[0].split(".")
+        
+        if Users.getUserData(request[0])[2].split("-")[0] == "PendingRequest":
+            keyboard = types.InlineKeyboardMarkup()
+
+            button_accept = types.InlineKeyboardButton(text="Принять заявку", callback_data=f'acceptRequest_{request[0]}')
+            keyboard.add(button_accept)
+            button_skip = types.InlineKeyboardButton(text="Пропустить заявку", callback_data="skipRequest")
+            keyboard.add(button_skip)
+            button_reject = types.InlineKeyboardButton(text="Отклонить заявку", callback_data=f'rejectRequest_{request[0]}')
+            keyboard.add(button_reject)
+            button_previous = types.InlineKeyboardButton(text="Назад в меню", callback_data="previous")
+            keyboard.add(button_previous)
+
+            bot.edit_message_text(f'<b>Заявка на вступление:</b>'
+                                 f'\n\nПользователь: <b>{realName[0]} {realName[1]} {realName[2]}</b>, @XRTG074'
+                                 f'\n\nЗапрос на вступление в школу как ученик',
+                                 callbackData.message.chat.id, main_message_id, parse_mode="html", reply_markup=keyboard)
+            
+        await asyncio.sleep(0)
+    keyboard = types.InlineKeyboardMarkup()
+
+    button_previous = types.InlineKeyboardButton(text="Назад в меню", callback_data="previous")
+    keyboard.add(button_previous)
+
+    bot.edit_message_text(f'Больше заявок на вступление нет',
+                          callbackData.message.chat.id, main_message_id, parse_mode="html", reply_markup=keyboard)
+        
+
+# - Список всех классов
+
+def gradesList(chat_id, main_message_id):
+    userData = Users.getUserData(chat_id)
+    keyboard = types.InlineKeyboardMarkup()
+
+    if School.getUserData(userData[2], chat_id)[0] == "Principal":
+        grades = School.getAllGrades(userData[2])
+
+        gradesTable = "Классы в Вашей школе:"
+        
+        button_createNewGrade = types.InlineKeyboardButton(text="Создать новый класс", callback_data="createNewGrade")
+        keyboard.add(button_createNewGrade)
+        button_previous = types.InlineKeyboardButton(text="Вернуться в меню", callback_data="previous")
+        keyboard.add(button_previous)
+
+        if grades is None:
+            bot.edit_message_text('В Вашей школе нет классов\n\nПочему бы не создать новый? - Просто нажмите на кнопку "Создать новый класс"',
+                              chat_id, main_message_id, parse_mode="html", reply_markup=keyboard)
+        else:
+            for grade in grades:
+                print(grade)
+                realName = Users.getUserData(grade[2])[0].split(".")
+
+                gradesTable = gradesTable + f'\n\nКласс: <b>{grade[0]}</b>. Классный руководитель - <b>{realName[0]} {realName[1]} {realName[2]}</b>'
+            bot.edit_message_text(gradesTable,
+                                  chat_id, main_message_id, parse_mode="html", reply_markup=keyboard)
+            
+# - Создание нового класса
+
+def NewGrade(chat_id, main_message_id, current_menu):
+    keyboard = types.InlineKeyboardMarkup()
+
+    button_previous = types.InlineKeyboardButton(text="Вернуться к предыдущему шагу", callback_data="previous")
+    keyboard.add(button_previous)
+
+    if current_menu == "GradeCreate_Name":
+        bot.edit_message_text('Тогда вперед!\n\nПридумайте <b>название</b> Вашего класса:',
+                             chat_id, main_message_id, parse_mode="html", reply_markup=keyboard)
+    elif current_menu == "GradeCreate_Level":
+        bot.edit_message_text('Продолжаем:\n\nВведите <b>цифру</b> от 1 до 11 (включительно), которая будет обозначать уровень класса (1 класс, 2 класс и.т.д.):',
+                             chat_id, main_message_id, parse_mode="html", reply_markup=keyboard)
+    else:
+        bot.edit_message_text('Похоже, что вы введи либо не цифру, либо цифру не в диапозоне от 1 до 11'
+                              '\n\nВведите <b>цифру</b> от 1 до 11 (включительно), которая будет обозначать уровень класса (1 класс, 2 класс и.т.д.) еще раз:',
+                             chat_id, main_message_id, parse_mode="html", reply_markup=keyboard)
+        
+# - Подтверждение создания нового класса
+
+def ConfrimNewGrade(chat_id, main_message_id, gradeName, gradeLevel):
+    keyboard = types.InlineKeyboardMarkup()
+
+    userData = Users.getUserData(chat_id)
+
+    button_confirmNewGrade = types.InlineKeyboardButton(text="Да, все верно", callback_data=f"confirmNewGrade_{userData[2]}")
+    keyboard.add(button_confirmNewGrade)
+
+    bot.edit_message_text(f'Я создам класс под названием <b>{gradeName}</b> уровня <b>{gradeLevel}</b> класса\n\nВсе верно?',
+                             chat_id, main_message_id, parse_mode="html", reply_markup=keyboard)

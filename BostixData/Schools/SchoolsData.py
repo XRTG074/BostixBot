@@ -1,5 +1,7 @@
 import sqlite3 # - Библиотека базы данных
 
+import BostixData.Schools.SchoolData as School
+
 import random
 
 dataFile = sqlite3.connect("BostixData/Data/SCHdata.db") # - Файл базы данных
@@ -28,6 +30,8 @@ def AddNewSchool(schoolLogin, schoolName):
 
     dataBase = dataFile.cursor()
     dataBase.execute('INSERT INTO schoolsData (schoolLogin, schoolID, schoolName) VALUES (?, ?, ?)', (str(schoolLogin), schoolID, str(schoolName)))
+
+    School.AddNewSchool(schoolLogin)
 
     dataFile.commit()
 
