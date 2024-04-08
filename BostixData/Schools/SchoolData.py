@@ -5,7 +5,7 @@ import sqlite3 # - Библиотека базы данных
 # - Добавление новой школы
 
 def AddNewSchool(schoolLogin):
-    dataFile = sqlite3.connect(f"BostixData/Data/Schools/school_{schoolLogin}.db") # - Файл базы данных
+    dataFile = sqlite3.connect(f"BostixData/Data/SchoolsData/school_{schoolLogin}.db") # - Файл базы данных
 
     dataBase = dataFile.cursor()
 
@@ -20,7 +20,7 @@ def AddNewSchool(schoolLogin):
 
 def AddNewGrade(schoolLogin, gradeName, headTeacherID, gradeLevel):
 
-    dataFile = sqlite3.connect(f"BostixData/Data/Schools/school_{schoolLogin}.db") # - Файл базы данных
+    dataFile = sqlite3.connect(f"BostixData/Data/SchoolsData/school_{schoolLogin}.db") # - Файл базы данных
 
     dataBase = dataFile.cursor()
 
@@ -33,7 +33,7 @@ def AddNewGrade(schoolLogin, gradeName, headTeacherID, gradeLevel):
 
     dataFile.close()
 
-    dataFile = sqlite3.connect(f"BostixData/Data/Schools/school_{schoolLogin}.db") # - Файл базы данных
+    dataFile = sqlite3.connect(f"BostixData/Data/SchoolsData/school_{schoolLogin}.db") # - Файл базы данных
 
     dataBase = dataFile.cursor()
 
@@ -49,7 +49,7 @@ def AddNewGrade(schoolLogin, gradeName, headTeacherID, gradeLevel):
 # - Добавление нового участника в класс
 
 def AddNewMemberToGrade(schoolLogin, gradeName, userID, role, customRole="None"):
-    dataFile = sqlite3.connect(f"BostixData/Data/Schools/school_{schoolLogin}.db") # - Файл базы данных
+    dataFile = sqlite3.connect(f"BostixData/Data/SchoolsData/school_{schoolLogin}.db") # - Файл базы данных
 
     dataBase = dataFile.cursor()
 
@@ -62,7 +62,7 @@ def AddNewMemberToGrade(schoolLogin, gradeName, userID, role, customRole="None")
 # - Добавление нового участника в школу
 
 def AddNewMemberToSchool(userID, schoolLogin, role, customRole="None", gradeName="None"):
-    dataFile = sqlite3.connect(f"BostixData/Data/Schools/school_{schoolLogin}.db") # - Файл базы данных
+    dataFile = sqlite3.connect(f"BostixData/Data/SchoolsData/school_{schoolLogin}.db") # - Файл базы данных
 
     dataBase = dataFile.cursor()
 
@@ -75,7 +75,7 @@ def AddNewMemberToSchool(userID, schoolLogin, role, customRole="None", gradeName
 # - Получение информации о пользователе по ID
 
 def getUserData(schoolLogin, userID):
-    dataFile = sqlite3.connect(f"BostixData/Data/Schools/school_{schoolLogin}.db") # - Файл базы данных
+    dataFile = sqlite3.connect(f"BostixData/Data/SchoolsData/school_{schoolLogin}.db") # - Файл базы данных
 
     dataBase = dataFile.cursor()
 
@@ -85,7 +85,7 @@ def getUserData(schoolLogin, userID):
 # - Получение определенного класса
 
 def getGrade(schoolLogin, gradeName):
-    dataFile = sqlite3.connect(f"BostixData/Data/Schools/school_{schoolLogin}.db") # - Файл базы данных
+    dataFile = sqlite3.connect(f"BostixData/Data/SchoolsData/school_{schoolLogin}.db") # - Файл базы данных
 
     dataBase = dataFile.cursor()
 
@@ -96,7 +96,7 @@ def getGrade(schoolLogin, gradeName):
 # - Получение всех классов
 
 def getAllGrades(schoolLogin):
-    dataFile = sqlite3.connect(f"BostixData/Data/Schools/school_{schoolLogin}.db") # - Файл базы данных
+    dataFile = sqlite3.connect(f"BostixData/Data/SchoolsData/school_{schoolLogin}.db") # - Файл базы данных
 
     dataBase = dataFile.cursor()
 
