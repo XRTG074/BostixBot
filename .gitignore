@@ -161,6 +161,4 @@ cython_debug/
 
 
 # Базы данных
-BostixData/Data/Schools
-BostixData/Data/USRData.db
-BostixData/Data/SCHdata.db
+*db
