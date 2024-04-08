@@ -37,7 +37,7 @@ def AddNewGrade(schoolLogin, gradeName, headTeacherID, gradeLevel):
 
     dataBase = dataFile.cursor()
 
-    dataBase.execute(f'''CREATE TABLE IF NOT EXISTS {gradeName}_gradeMembersData
+    dataBase.execute(f'''CREATE TABLE IF NOT EXISTS {gradeName}GradeMembersData
             	    (userID INTEGER PRIMARY KEY, role TEXT, customRole TEXT)''') # - База данных участников классов школы
     
     dataFile.commit()
@@ -53,7 +53,7 @@ def AddNewMemberToGrade(schoolLogin, gradeName, userID, role, customRole="None")
 
     dataBase = dataFile.cursor()
 
-    dataBase.execute(f'INSERT INTO {gradeName}_gradeMembersData (userID, role, customRole) VALUES (?, ?, ?)', (userID, role, customRole))
+    dataBase.execute(f'INSERT INTO {gradeName}GradeMembersData (userID, role, customRole) VALUES (?, ?, ?)', (userID, role, customRole))
 
     dataFile.commit()
 
@@ -89,7 +89,7 @@ def getGrade(schoolLogin, gradeName):
 
     dataBase = dataFile.cursor()
 
-    dataBase.execute(f'SELECT * FROM {gradeName}_gradeMembersData')
+    dataBase.execute(f'SELECT * FROM {gradeName}GradeMembersData')
     return dataBase.fetchall()
 
 
