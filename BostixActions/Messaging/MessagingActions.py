@@ -10,15 +10,14 @@ import BostixData.Schools.SchoolData as School
 
 import BostixActions.Learn.LearnMaterials as Learn
 
-
-global BotLink
-BotLink = "КрутаяСсылкаНаВашегоНевероятногоБота"
-
 # - Инициализация бота
 
-def InitBot(_bot):
-    global bot
+def InitBot(_bot, _botLink):
+    global bot # - Бот
     bot = _bot
+
+    global botLink # - Ссылка на профиль бота (Для танцев с DeepLink-ом)
+    botLink = _botLink
 
 # - Отправка приветственного сообщения
 
@@ -442,11 +441,11 @@ def gradesList(chat_id, main_message_id):
         else:
             for grade in grades:
                 
-                global BotLink
+                global botLink
 
                 realName = Users.getUserData(grade[1])[0].split(".")
 
-                gradesTable = gradesTable + f'\n\nКласс: <a href="{BotLink}?start=grade_{grade[0]}"><b>{grade[0]}</b></a>. Классный руководитель - <b>{realName[0]} {realName[1]} {realName[2]}</b>'
+                gradesTable = gradesTable + f'\n\nКласс: <a href="{botLink}?start=grade_{grade[0]}"><b>{grade[0]}</b></a>. Классный руководитель - <b>{realName[0]} {realName[1]} {realName[2]}</b>'
             bot.edit_message_text(gradesTable,
                                   chat_id, main_message_id, parse_mode="html", reply_markup=keyboard)
             

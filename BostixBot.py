@@ -8,6 +8,9 @@ import BostixData.Schools.SchoolData as School
 
 bot = telebot.TeleBot("МестоДляОченьКрутогоТокена") # - Бот 
 
+global botLink # - Ссылка на профиль бота (Для танцев с DeepLink-ом)
+botLink = "СсылкаНаПрофильВашегоНевероятногоБота"
+
 main_message_id = 0 # ID главного сообщения, где будет происходить все
 
 current_menu = "None" # - Текущее меню бота
@@ -36,7 +39,7 @@ joinRequests = None
 
 # - Инициализация бота в другом файле
 
-Messaging.InitBot(bot)
+Messaging.InitBot(bot, botLink)
 
 ### - Обработчик текстовых сообщений
 @bot.message_handler(content_types=["text"])
