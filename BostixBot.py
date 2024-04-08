@@ -282,6 +282,8 @@ def getCallback(callbackData):
             Schools.AddNewSchool(tempSchoolLogin, tempSchoolName)
             School.AddNewMemberToSchool(callbackData.message.chat.id, tempSchoolLogin, "Principal", "None")
 
+        Messaging.MainMenu(callbackData.message.chat.id, main_message_id)
+
 
     elif callbackData.data == "checkRequests":
         current_menu = "JoinRequests"
