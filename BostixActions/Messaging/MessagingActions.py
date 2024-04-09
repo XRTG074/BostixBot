@@ -198,14 +198,23 @@ def SignInStage2(chat_id, main_message_id, current_menu, role):
         keyboard.add(button_previous)
         bot.edit_message_text('Тогда вперед!\n\nПридумайте <b>логин</b> Вашей школы'
                              '\nОн будет использоваться как второе имя Вашей школы и для ряда других вещей'
+                             '\n\n<b>Логин должен содержать только английские буквы, не включать в себя пробелы и другие символы</b>'
                              '\n\nНапишите мне <b>логин</b> Вашей школы:',
                              chat_id, main_message_id, parse_mode="html", reply_markup=keyboard)
         
-    elif current_menu == "SignInStage2_SchoolCreateLoginAgain":
+    elif current_menu == "SignInStage2_SchoolCreateLoginAgain_Occupied":
         button_previous = types.InlineKeyboardButton(text="Вернуться к предыдущему шагу", callback_data="previous")
         keyboard.add(button_previous)
         bot.edit_message_text('К сожалению этот невероятный <b>логин</b> уже занят((('
                               '\n\nПридумайте и напишите мне <b>логин</b> еще раз:',
+                                chat_id, main_message_id, parse_mode="html", reply_markup=keyboard)
+    
+    elif current_menu == "SignInStage2_SchoolCreateLoginAgain_Invalid":
+        button_previous = types.InlineKeyboardButton(text="Вернуться к предыдущему шагу", callback_data="previous")
+        keyboard.add(button_previous)
+        bot.edit_message_text('В вашем <b>логине</b> присутствуют недопустимые буквы и символы'
+                              '\n\n<b>Логин должен содержать только английские буквы, не включать в себя пробелы и другие символы</b>'
+                              '\n\nПридумайте и напишите мне <b>логин</b> Вашей школы еще раз',
                                 chat_id, main_message_id, parse_mode="html", reply_markup=keyboard)
         
     elif current_menu == "SignInStage2_SchoolCreateName":
@@ -487,7 +496,7 @@ def NewGrade(chat_id, main_message_id, current_menu):
     keyboard.add(button_previous)
 
     if current_menu == "GradeCreate_Name":
-        bot.edit_message_text('Тогда вперед!\n\nПридумайте <b>название</b> Вашего класса:',
+        bot.edit_message_text('Тогда вперед!\n\nПридумайте <b>название</b> Вашего класса и напишите его без пробелов и кавычек:',
                              chat_id, main_message_id, parse_mode="html", reply_markup=keyboard)
     elif current_menu == "GradeCreate_Level":
         bot.edit_message_text('Продолжаем:\n\nВведите <b>цифру</b> от 1 до 11 (включительно), которая будет обозначать уровень класса (1 класс, 2 класс и.т.д.):',

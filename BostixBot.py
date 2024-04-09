@@ -37,6 +37,11 @@ global tempLearnTopic
 global joinRequests # - Короутина для последовательного вывода заявок на вступление в школу
 joinRequests = None
 
+global allowedSymbols
+allowedSymbols = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q',
+                  'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6',
+                  '7', '8', '9']
+
 # - Инициализация бота в другом файле
 
 Messaging.InitBot(bot, botLink)
@@ -46,6 +51,7 @@ Messaging.InitBot(bot, botLink)
 def getMessage(messageData):
 
     global current_menu
+    global allowedSymbols
     
     # - Проверка на наличие DeepLink в сообщении
 
@@ -55,7 +61,6 @@ def getMessage(messageData):
         parameter = command[1]
         if parameter.split("_")[0] == "grade":
             current_menu = "GradeData"
-
             Messaging.showGrade(parameter.split("_")[1], messageData.from_user.id, main_message_id)
 
     # - Проверка на наличие аккаунта в базе данных
@@ -102,15 +107,29 @@ def getMessage(messageData):
     # - Получение логина и названия школы
 
     elif "SignInStage2_School" in current_menu:
-        if current_menu == "SignInStage2_SchoolCreateLogin" or current_menu == "SignInStage2_SchoolCreateLoginAgain":
-            if Schools.getSchoolData(messageData.text) is None:
+
+        Validness = True
+
+        # - Проверка на наличие недопустимых символов
+        
+        for char in messageData.text.lower():
+            if not char in allowedSymbols:
+                Validness = False
+                break
+
+        if current_menu == "SignInStage2_SchoolCreateLogin" or current_menu == "SignInStage2_SchoolCreateLoginAgain_Occupied" or current_menu == "SignInStage2_SchoolCreateLoginAgain_Invalid":
+            if Schools.getSchoolData(messageData.text) is None and Validness:
                 global tempSchoolLogin
                 tempSchoolLogin = messageData.text
                 current_menu = "SignInStage2_SchoolCreateName"
+                Messaging.SignInStage2(messageData.from_user.id, main_message_id, current_menu, tempRole)
 
-            if current_menu != "SignInStage2_SchoolCreateLoginAgain":
+            elif not "SignInStage2_SchoolCreateLoginAgain" in current_menu:
                 if not Schools.getSchoolData(messageData.text) is None:
-                    current_menu = "SignInStage2_SchoolCreateLoginAgain"
+                    current_menu = "SignInStage2_SchoolCreateLoginAgain_Occupied"
+                elif not Validness:
+                    current_menu = "SignInStage2_SchoolCreateLoginAgain_Invalid"
+            
                 Messaging.SignInStage2(messageData.from_user.id, main_message_id, current_menu, tempRole)
         elif current_menu == "SignInStage2_SchoolCreateName":
             current_menu = "SignInStage2_Confirm"
