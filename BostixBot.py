@@ -6,10 +6,10 @@ import BostixData.Users.UsersData as Users
 import BostixData.Schools.SchoolsData as Schools
 import BostixData.Schools.SchoolData as School
 
-bot = telebot.TeleBot("7142151766:AAGGo-BgD4tKoL7HIXB9b68CNgVhTEZXiCU") # - Бот 
+bot = telebot.TeleBot("МестоДляВашегоНевероятногоТокена") # - Бот 
 
 global botLink # - Ссылка на профиль бота (Для танцев с DeepLink-ом)
-botLink = "https://t.me/BostixBot"
+botLink = "СсылкаНаВашегоНевероятногоБота"
 
 main_message_id = 0 # ID главного сообщения, где будет происходить все
 
